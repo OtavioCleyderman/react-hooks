@@ -6,11 +6,20 @@ import * as React from 'react'
 function Greeting({initialName = ''}) {
   // 🐨 initialize the state to the value from localStorage
   // 💰 window.localStorage.getItem('name') || initialName
-  const [name, setName] = React.useState(initialName)
+
+  /* UseState, quando recebe um valor estático, vai sempre inicializar o componente em toda atualização do componente que houver.
+     Para evitar isso, em vez de passar o valor estático, passamos uma FUNÇÃO que será chamada e inicializará a variável de estado 
+     apenas quando necessário. Isso é chamado de LAZY INITIALIZER (inicializador "preguiçoso") */
+  const [name, setName] = React.useState(() => window.localStorage.getItem('name') || initialName)
 
   // 🐨 Here's where you'll use `React.useEffect`.
   // The callback should set the `name` in localStorage.
   // 💰 window.localStorage.setItem('name', name)
+
+  React.useEffect(() => {
+    // Atualiza o localStorage como um efeito colateral da atualização do componente que foi disparado pela atualização do estado
+    window.localStorage.setItem('name', name)
+  }, [name]) // Dependência = Só chama useEffect quando a variável de estado name for alterada
 
   function handleChange(event) {
     setName(event.target.value)
@@ -22,6 +31,7 @@ function Greeting({initialName = ''}) {
         <input value={name} onChange={handleChange} id="name" />
       </form>
       {name ? <strong>Hello {name}</strong> : 'Please type your name'}
+      <div>localStorage: {window.localStorage.getItem('name')}</div>
     </div>
   )
 }
