@@ -11,7 +11,19 @@ import {PokemonForm, fetchPokemon, PokemonInfoFallback, PokemonDataView} from '.
 function PokemonInfo({pokemonName}) {
   // 🐨 Have state for the pokemon (null)
 
-const [pokemon, setPokemon] = React.useState(null)
+// const [pokemon, setPokemon] = React.useState(null)
+// const [error, setError] = React.useState(null)
+// const [status, setStatus] = React.useState('idle') // Ocioso
+
+// Reunir todas as variáveis de estado em um único objeto
+const [state, setState] = React.useState({
+    pokemon: null,
+    error: null,
+    status: 'idle' // Ocioso
+})
+
+// Usando destruturação, poderemos acessar os atributos do objeto de estado por meio de variáveis individuais 
+const { pokemon, error, status } = state
 
 React.useEffect(() => {
 
@@ -19,7 +31,9 @@ React.useEffect(() => {
     if(pokemonName === '') return
 
     // limpando os dados do pokemon anterior
-    setPokemon(null)
+    // setPokemon(null)
+    // setError(null)
+    setState({pokemon: null, error: null})
 
     // fetchPokemon é uma função assíncrona. Essas funções podem demorar mais ou menos o mesmo tempo para serem executadas, e, enquanto elas são processadas,
     // a execução do programa principal continua.
@@ -44,11 +58,18 @@ React.useEffect(() => {
     async function getPokemon() {
         try {
             // A chamada assíncrona deve estar dentro de uma função marcada com a palavra-chave await.
+            // setStatus('pending') // Informações pendentes
+            setState({status: 'pending'})
             let data = await fetchPokemon(pokemonName) // chamada assíncrona
-            setPokemon(data)
-        }
+            // setPokemon(data)
+            // setStatus('resolved') // Requisição remota resolvida com sucesso
+            setState({pokemon: data, status: 'resolved'})
+        } 
         catch(erro) {
-            alert(erro.mesage)
+            //alert(erro.mesage)
+            //setError(erro)
+            //setStatus('rejected') // Requisição remota rejeitada por erro
+            setState({error: erro, status: 'rejected'})
         }
     }
     // Chamda à função
@@ -70,12 +91,22 @@ React.useEffect(() => {
   //   2. pokemonName but no pokemon: <PokemonInfoFallback name={pokemonName} />
   //   3. pokemon: <PokemonDataView pokemon={pokemon} />
 
-  // 💣 remove this
-    if(pokemonName === '') return 'Submit a pokemon'
-    else if(pokemonName !== '' & pokemon === null)
-        return <PokemonInfoFallback nome={pokemonName} />
-    else
-        return <PokemonDataView pokemon={pokemon} />
+
+    switch(status) {
+        case 'idle':
+            return 'Submit a pokemon'
+        case 'rejected':
+           return (
+                <div role="alert">
+                    There was an error: <pre style={{whiteSpace: 'normal'}}>{error.message}</pre>
+                </div>
+           )   
+        case 'pending':
+            return <PokemonInfoFallback nome={pokemonName} />
+        // case resolved:
+        default:
+            return <PokemonDataView pokemon={pokemon} />        
+    }
 }
 
 function App() {
